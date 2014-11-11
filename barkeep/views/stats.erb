@@ -1,0 +1,83 @@
+<%= js_bundle(:stats_vendor_js) %>
+<%= js_bundle(:stats_app_js) %>
+
+<div id="stats">
+  <% if current_user %>
+    <form id="statsRangeForm" action="/set_stats_time_range" method="post">
+      <span>Show stats from</span>
+      <select name="since">
+        <option value="hour" <%= current_user.stats_time_range == "hour" ? "selected" : "" %>>last hour</option>
+        <option value="day" <%= current_user.stats_time_range == "day" ? "selected" : "" %>>last day</option>
+        <option value="week" <%= current_user.stats_time_range == "week" ? "selected" : "" %>>last week</option>
+        <option value="month" <%= current_user.stats_time_range == "month" ? "selected" : "" %>>last month</option>
+        <option value="year" <%= current_user.stats_time_range == "year" ? "selected" : "" %>>last year</option>
+        <option value="all" <%= current_user.stats_time_range == "all" ? "selected" : "" %>>all time</option>
+      </select>
+    </form>
+  <% end %>
+  <div id="statistics">
+    <div class="statistic topReviewers">
+      <div class="header"><div class="name">Most comment activity</div></div>
+      <table class="authorList">
+        <% top_reviewers.each do |user, count| %>
+          <tr>
+            <td class="avatarCell">
+              <img class="avatar" src="<%= user.gravatar %>"/>
+            </td>
+            <td class="author">
+              <a href="mailto:<%= user.email %>" rel="tipsy" class="west" title="<%= user.email %>">
+                <%= user.name[0..25] %></a>
+            </td>
+            <td class="count">with <%= StringHelper.pluralize(count, "comment") %></td>
+            <td class="email">
+              <a href="mailto:<%= user.email %>" rel="tipsy" class="east" title="Email"><%= user.email %>
+            </a>
+          </td>
+          </tr>
+        <% end %>
+      </table>
+    </div>
+    <div class="statistic reviewCoverage">
+      <div class="header"><div class="name">Review Coverage</div></div>
+      <% if num_commits == 0 %>
+        <span>No commits within this time range.</span>
+      <% end %>
+      <div id="reviewPercentGraph" class="graph"
+          unreviewedPercent="<%= unreviewed_percent %>"
+          commentedPercent="<%= commented_percent %>"
+          approvedPercent="<%= approved_percent %>">
+      </div>
+    </div>
+    <!-- NOTE(dmac): The Flot canvas isn't playing nice with our css, so we're resorting to a float clear. -->
+    <div class="clear"></div>
+    <div class="statistic chattyCommits">
+      <div class="header"><div class="name">Chatty Commits</div></div>
+      <table class="commitsList">
+        <% chatty_commits.each do |commit, count| %>
+          <%= erb :_commit_line, :layout => false, :locals => { :commit => commit } %>
+        <% end %>
+      </table>
+    </div>
+    <div class="statistic topApprovers">
+      <div class="header"><div class="name">Top Approvers</div></div>
+      <table class="authorList">
+        <% top_approvers.each do |user, count| %>
+            <tr>
+              <td class="avatarCell">
+                <img class="avatar" src="<%= user.gravatar %>"/>
+              </td>
+              <td class="author">
+                <a href="mailto:<%= user.email %>" rel="tipsy" class="west" title="<%= user.email %>">
+                  <%= user.name[0..25] %></a>
+              </td>
+              <td class="count">with <%= StringHelper.pluralize(count, "approved commit") %></td>
+              <td class="email">
+                <a href="mailto:<%= user.email %>" rel="tipsy" class="east" title="Email"><%= user.email %>
+                </a>
+              </td>
+            </tr>
+        <% end %>
+      </table>
+    </div>
+  </div>
+</div>

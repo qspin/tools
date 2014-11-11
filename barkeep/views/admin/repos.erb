@@ -1,0 +1,123 @@
+<%#
+  An admin view showing the list of monitored repos, with controls for adding and deleting.
+  Params:
+    - repos_hashes: an array of repo hashes of the form { :git_repo, :newest_commit }.
+%>
+
+<%= js_bundle(:repo_app_js) %>
+
+<div id="repos">
+
+  <%= admin_page_breadcrumb "Manage repositories" %>
+
+  <div id="confirmationMessage"></div>
+
+<h2>Information regarding repositories</h2>
+<p class="note">
+barkeep code review is only possible on Git repositories so adding a svn repository is not enough to start code review on the repo. You should first add the SVN repo and afterwards add Git repo with information in the table of the SVN repositories.
+</p>
+
+  <h2>Add new repository</h2>
+  <div id="cloneForm">
+    <label for="newRepoUrl">Repo url for GIT</label><br/>
+    <input type="text" id="newRepoUrl" />
+    <button id="clone" class="standard">Add repo</button><br/>
+    <span class="note">e.g. http://github.com/ooyala/barkeep.git</span><br/>
+    <p class="note">This repo will be cloned into <code><%= REPOS_ROOT %></code></p>
+  </div>
+  <div id="cloneForm">
+    <label for="newRepoUrl">Repo url for SVN</label><br/>
+    <input type="text" id="newSvnUrl" />
+    <button id="svn" class="standard">Add repo</button><br/>
+    <span class="note">e.g. svn://svn.eu.net.dana.com/TZL16</span><br/>
+    <p class="note">This repo will be cloned into <code><%= REPOS_SVN_ROOT %></code></p>
+  </div>
+
+  <% unless repos_being_cloned.empty? %>
+    <h2>Repos scheduled to be cloned</h2>
+    <%= repos_being_cloned.join("<br/>") %>
+  <% end %>
+
+  <h2>Repositories currently monitored</h2>
+  <h3>Git repositories:</h3>
+  <table id="repoList">
+    <th>Name</th>
+    <th>URL</th>
+    <th>Newest fetched commit</th>
+    <th>Delete</th>
+
+    <% repos_hashes.each do |repo_hash| %>
+      <tr>
+        <td><%= repo_hash[:name] %></td>
+        <% if repo_hash[:origin_url] %>
+          <td><%= repo_hash[:origin_url] %></td>
+        <% else %>
+          <td>(No origin -- repo is likely in a bad state)</td>
+        <% end %>
+        <td class="newestFetched">
+          <% grit_commit = repo_hash[:newest_commit] ? repo_hash[:newest_commit].grit_commit : nil %>
+          <% if grit_commit %>
+            <a href="<%= grit_commit.link %>" class="commitSha"><%= grit_commit.id_abbrev %></a>
+            <span class="commitDate"><%= grit_commit.date.to_pretty %></span><br/>
+            <%= grit_commit.author %>
+          <% end %>
+        </td>
+        <td class="delete"><div class="trash"></div></td>
+      </tr>
+    <% end %>
+  </table>
+  
+  <br/>
+  <h3>SVN repositories:</h3>
+  <table id="repoList">
+    <th>Name</th>
+    <th>URL</th>
+    <th>Git path</th>
+
+    <% Dir.foreach(REPOS_SVN_ROOT) do |repo| next if repo == '.' or repo == '..' or repo == '.git' %>
+    <tr>
+    <td><%= repo %></td>
+    <td>SVN does not need path</td>
+    <td>../<%= File.join(REPOS_SVN_ROOT, repo) %></td>
+    </tr>
+    <% end %>
+  </table>
+  
+
+  <h2>Repo pulling and cloning logs</h2>
+
+  <p>
+    This is activity logged from the Resque background jobs responsible for cloning new repos and running
+    "git fetch" for all existing repos. Use these logs to debug if one of your repos isn't able to be cloned
+    or isn't getting updated.
+  </p>
+
+  <p>
+    <strong><a href="/admin/log/clone_new_repo.log">clone_new_repo.log</a></strong>
+    <div class="logFile">
+      <%= clone_new_repo_log.gsub("\n", "<br/>") %>
+    </div>
+  </p>
+
+  <p>
+    <strong><a href="/admin/log/clone_new_svn_repo.log">clone_new_svn_repo.log</a></strong>
+    <div class="logFile">
+      <%= clone_new_svn_repo_log.gsub("\n", "<br/>") %>
+    </div>
+  </p>
+
+  <p>
+    <strong><a href="/admin/log/fetch_commits.log">fetch_commits.log</a></strong>
+    <div class="logFile">
+      <%= fetch_commits_log.gsub("\n", "<br/>") %>
+    </div>
+  </p>
+
+  <p>
+    <strong><a href="/admin/log/fetch_svn_commits.log">fetch_svn_commits.log</a></strong>
+    <div class="logFile">
+      <%= fetch_svn_commits_log.gsub("\n", "<br/>") %>
+    </div>
+  </p>
+
+</div>

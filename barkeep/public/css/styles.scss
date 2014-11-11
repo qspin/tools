@@ -1,0 +1,611 @@
+@import "css/mixins";
+@import "css/saved_search";
+@import "css/diff_view";
+@import "css/code_styles/default";
+@import "css/tipsy_styles";
+
+/*
+ * Common styles shared by all pages.
+ */
+
+body {
+  background-color: white;
+  font-family: $sansFont;
+  color: $textColor;
+  background-image: url(/assets/images/background.png);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+strong { font-weight: bold; }
+
+// There are cases where we want focus for tooltips but we don't want to show an outline
+.noFocusOutline {
+  // FF
+  -moz-outline-style: none;
+  outline-style: none;
+  outline-width: 0px;
+  outline-color: -moz-use-text-color;
+  // Chrome
+  outline: none
+}
+
+// Full-screen overlays
+.overlay {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: table;
+  visibility: hidden;
+
+  .cellWrapper {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+
+    .container {
+      margin-left: auto;
+      margin-right: auto;
+      background: $textColor;
+      color: $almostWhite;
+      opacity: 0.95;
+      border-radius: 3px;
+    }
+  }
+}
+
+/*
+ * Standard elements and form control styles.
+ */
+
+a {
+  color: $linkColor;
+  text-decoration: none;
+  outline: 0; /* This removes the dotted line around links that Firefox adds when they're focused. */
+}
+a:hover {
+  color: #FD0D00;
+  text-decoration: underline;
+}
+a:active {
+  background-color: $linkColor;
+  color: white;
+}
+
+/*
+ * "Copy" styles, which we use for pages displaying normal headings, paragraphs and text (like the admin page)
+ */
+.copy{
+  table { border-collapse: collapse; }
+
+  td {
+    padding: 10px;
+    border: $standardBorder;
+  }
+
+  .column {
+    box-sizing: border-box;
+    padding-right: 20px;
+    width: 50%;
+    float: left;
+    vertical-align: top;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin: 14px 0;
+    margin-top: 20px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #D0CABD;
+  }
+
+  h4 {
+    font-size: 16px;
+    margin: 10px 0;
+  }
+
+  p { margin: 10px 0; }
+
+  ul, ol { margin-left: 20px; }
+  li {
+    margin: 6px 0;
+  }
+}
+
+img:active { background-color: white }
+
+/* Our fancy buttons have a pretty high-profile red gradient. */
+button.fancy {
+  border: 1px solid $deepRed;
+  /* This darker border helps distinguish the drop shadow. */
+  border-bottom: 1px solid darken($deepRed, 5%);
+  border-radius: 3px;
+  box-shadow: 0 2px 4px #999;
+  text-shadow: 0px -1px 1px $deepRed;
+  padding: 5px 18px;
+  color: white;
+  cursor: pointer;
+
+  @include linear-gradient(lighten($coreRed, 3%) 0%, darken($coreRed, 10%) 95%,
+        $fallback: darken($coreRed, 18%));
+
+  &:hover {
+    border: 1px solid darken(#890128, 25%);
+    @include linear-gradient(lighten($coreRed, 8%) 0%, darken($coreRed, 10%) 95%,
+        $fallback: darken($coreRed, 18%));
+  }
+  &:active { background-image: none; }
+}
+
+/* Our standard buttons are flat grey buttons. */
+button.standard, input[type=button], input[type=submit] {
+  border-radius: 3px;
+  padding: 7px 12px;
+  text-shadow: 0px -1px 1px #EEEEEE;
+  border: 1px solid #AAAAAA;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333333;
+  $standardButtonGrey: #F2F1EF;
+
+  @include linear-gradient($standardButtonGrey 0%, darken($standardButtonGrey, 8%) 95%);
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.7);
+  &:hover {
+    @include linear-gradient(lighten($standardButtonGrey, 2%) 0%, darken($standardButtonGrey, 5%) 95%);
+  }
+  &:active {
+    @include linear-gradient(darken($standardButtonGrey, 8%), $standardButtonGrey 95%);
+  }
+}
+
+.webkit button.standard { font-weight: bold; }
+
+/* jQuery autocomplete styles. */
+.ui-widget {
+  /* This needs some width set, but it will fit itself to the  size of the autocompleting input box. */
+  width: 0px;
+  border: $standardBorder;
+  background: $almostWhite;
+
+  li {
+    list-style: none;
+    a {
+      display: inline-block;
+      width: 99%;
+      padding: 2px;
+      font-size: 14px;
+      color: $textColor;
+      font-family: $monoFont;
+      font-size: 14px;
+      &:hover { text-decoration: none; }
+    }
+
+    #ui-active-menuitem { background: #B8D2FA; }
+  }
+}
+
+.clear { clear: both; }
+
+
+/*
+ * Page chrome styles.
+ */
+#container {
+  clear: both;
+  width: $pageWidth;
+  margin: 0 auto;
+  margin-bottom: 150px;
+  position: relative;
+}
+
+header {
+  @include display-box;
+  position: relative;
+  width: $pageWidth;
+  margin: 0 auto;
+  margin-top: 17px;
+  margin-bottom: 40px;
+  height: 50px;
+
+  #icon {
+    opacity: 0.9;
+    background-image: url(/assets/images/barkeep_logo_80px.png);
+    position: absolute;
+    left: -100px;
+    /* NOTE(philc): This logo might look better on the right. */
+    /* right: 0;*/
+    width: 80px;
+    height: 80px;
+    text-align: center;
+    /* This image gets preloaded by the javascript so it's available on-hover. */
+    &:hover { background-image: url(/assets/images/barkeep_logo_howdy_80px.png); }
+  }
+
+  h1 {
+    margin-top: 5px;
+    a, a:hover, a:active {
+      border: 0;
+      margin: 0;
+      font-size: 46px;
+      background-color: transparent;
+
+      line-height: 100%;
+
+      font-weight: normal;
+      color: #777;
+      text-shadow: 0px 2px 1px white, 0px -1px 0px #888;
+      text-decoration: none;
+
+      .keep { color: #999; }
+    }
+  }
+
+  nav {
+    @include box-flex(1);
+    margin-top: 10px;
+    margin-left: 15px;
+    ul li {
+      list-style-type: none;
+      display: inline-block;
+      padding-bottom: 6px;
+      margin-right: 20px;
+
+      /* This extra div is needed to add a white shadow around the <a> tag. */
+      div {
+        box-shadow: 0px 2px 1px white;
+      }
+      a {
+        border-radius: 4px;
+        border: $standardBorder;
+        border-top: 0;
+
+        display: block;
+        width: 120px;
+        height: 27px;
+
+        background-color: $sunkenColor;
+        text-align: center;
+        padding-top: 8px;
+        color: #333;
+
+        box-shadow: 0px 1px 1px #999 inset;
+
+        /* Cancel any border effects that the standard a:hover implements. */
+        &:hover {
+          color: $linkColor;
+          border: $standardBorder;
+          border-top: 0;
+          text-decoration: none;
+        }
+        &:active { background-color: $sunkenColor; }
+      }
+
+      &.currentPage {
+        border-bottom: 4px solid $linkColor;
+      }
+    }
+  }
+
+  #signInBox {
+    a {
+      font-weight: bold;
+      &.currentPage { text-decoration: underline; }
+    }
+    font-size: 13px;
+    margin-top: 17px;
+
+    .signInGravatar {
+      border-radius: 3px;
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      float: left;
+    }
+
+    .userEmail {
+      display: inline-block;
+      border-bottom: 0px;
+      font-weight: bold;
+    }
+
+    input[type=text] {
+      width: 200px;
+    }
+  }
+}
+
+
+/*
+ * Styles for list of commits. These lists appear in saved searches as well as the stats page.
+ */
+table.commitsList, table.authorList {
+  width: $pageWidth + 30px; // Extra 30px for the comment number bubbles
+  border-collapse: collapse;
+
+  .avatar {
+    margin-right: 4px;
+    padding-right: 0px;
+    @include gravatar(25px);
+  }
+
+  font-size: 14px;
+  a {
+    position: relative;
+    text-decoration: none;
+    color: $textColor;
+    border: 0;
+  }
+  td {
+    padding-right: 7px;
+    a {
+      &:active { background-color: transparent; }
+      &:hover { text-decoration: underline; }
+    }
+    &.avatarCell { padding: 1px 2px; }
+    &.author { white-space: nowrap; }
+    &.commitId {
+      font: 16px $monoFont;
+      a { color: $lightTextColor; }
+      text-align: right;
+      padding-right: 7px;
+    }
+    &.approval { padding-right: 4px; }
+    &.commitMessage {
+      width: 100%;
+      a {
+        display: block;
+        width: 100%;
+        /* A height with overflow implements truncation of commit messages. There may be second and third
+         * lines of text in this element, but they'll be hidden. */
+        overflow: hidden;
+        height: 1.2em;
+      }
+    }
+    &.commitDate {
+      font-size: 13px;
+      text-align: right;
+    }
+    &.commitDate, &.commitRepo {
+      white-space: nowrap;
+      color: $lightTextColor;
+    }
+    &.commitRepo {
+      text-transform: uppercase;
+      font-size: 10px;
+      padding-right: 5px;
+    }
+    &.commentCount {
+      min-width: 25px;
+      padding-bottom: 2px;
+      white-space: nowrap;
+      text-align: right;
+      a { @include noLink; }
+      span {
+        font-size: 12px;
+        color: $lightTextColor;
+      }
+    }
+    &.approved {
+      background: transparent url(/assets/images/light_checkmark.png) no-repeat left center;
+    }
+  }
+  .selectArrow { min-width: 7px; }
+  .selected .selectArrow { background: url(/assets/images/right_arrow.png) no-repeat 0px 2px; }
+}
+
+
+/*
+ * Styles for the stats page.
+ */
+#stats {
+  #statistics {
+    .statistic {
+      border-collapse: collapse;
+      &.topReviewers, &.topApprovers {
+        .authorList {
+          td:last-child { padding-right: 0 }
+          td.email {
+            color: $lightTextColor;
+            font-size: 90%;
+            text-align: right;
+          }
+          td.count {
+            width: 100%;
+            color: $lightTextColor;
+          }
+        }
+      }
+
+      &.topReviewers {
+        margin-top: 30px;
+        display: inline-block;
+        .authorList {
+          width: $pageWidth * 0.5;
+        }
+      }
+
+      &.topApprovers {
+        width: 100%;
+        .authorList {
+          width: $pageWidth;
+          td.author { padding-right: 30px; }
+        }
+      }
+
+      &.reviewCoverage {
+        margin-top: 30px;
+        display: inline-block;
+        float: right;
+
+        .graph {
+          margin-top: 30px;
+          width: 300px;
+          height: 300px;
+        }
+      }
+
+      .commitsList {
+        .selectArrow { display: none; }
+        .commentCount { padding-right: 0; }
+        width: $pageWidth;
+      }
+    }
+  }
+}
+
+// The "Sign in to do X" prompt boxes.
+#signinPrompt {
+  &.commitSearch { @include embossedPanel; }
+  &.commit { @include raisedPanel; }
+  text-align: center;
+  padding: 20px 0px;
+  margin: 8px auto;
+}
+
+// Approval popup overlay
+.approvalPopup.overlay {
+  .cellWrapper {
+    .container {
+      font-size: 18px;
+      width: 400px;
+      height: 60px;
+      position: relative;
+      div {
+        width: 100%;
+        position: absolute;
+        height: 20px;
+        top: 50%;
+        margin-top: -12px;
+        code {
+          font-family: $monoFont;
+          text-shadow: -1px -1px 1px $textShadowColor;
+        }
+      }
+    }
+  }
+}
+
+/*
+ * Keyboard shortcut overlay.
+ */
+.kbShortcuts.overlay {
+  .cellWrapper {
+    .container {
+      width: $pageWidth;
+      position: relative;
+
+      .shortcuts {
+        background: transparent;
+        opacity: 1;
+        padding: 10px;
+
+        .title {
+          font-size: 30px;
+          text-shadow: 0px -1px 2px $textShadowColor;
+        }
+
+        .close {
+          position: absolute;
+          top: 0px;
+          right: 0px;
+          margin: 15px;
+          a { @include closeLinks; }
+        }
+
+        .tableWrapper {
+          width: 100%;
+          margin: 10px 0;
+          td { width: 50%; }
+
+          .shortcutList {
+            vertical-align: top;
+            .label {
+              font-size: 18px;
+              margin-bottom: 5px;
+            }
+
+            table {
+              border-collapse: collapse;
+              width: 100%;
+              tr {
+                td {
+                  padding: 0 10px;
+                  line-height: 150%;
+
+                  &.keys {
+                    width: 35%;
+                    font: 16px $monoFont;
+                    text-align: right;
+                    text-shadow: -1px -1px 1px $textShadowColor;
+                  }
+                  &.description {
+                    width: 65%;
+                    text-align: left;
+                    border-left: 2px solid $coreRed;
+                  }
+                }
+              }
+            }
+
+            .noShortcuts {
+              padding-top: 10px;
+              font-style: italic;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+/*
+ * Styles for Inspire.
+ */
+#inspire {
+  #quote {
+    margin: 100px auto 30px auto;
+    padding: 30px;
+    font-family: Georgia;
+    font-size: 2.0em;
+  }
+
+  #barkeepHead {
+    height: 100px;
+    padding-top: 0px;
+    padding-right: 125px;
+    text-align: right;
+    background: url(/assets/images/barkeep-head.png) no-repeat right;
+
+    span {
+      display: inline-block;
+      margin-top: 37px;
+      font-weight: bold;
+    }
+  }
+}
+
+
+/*
+ * Signin styles.
+ */
+#selectOpenIdProvider {
+  width: 500px;
+  margin: 0 auto;
+  h2 {
+    margin-bottom: 10px;
+  }
+  ol {
+    li {
+      font-size: 20px;
+      margin: 3px 0;
+      a { text-decoration: underline; }
+    }
+  }
+}

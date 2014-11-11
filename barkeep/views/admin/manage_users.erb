@@ -1,0 +1,39 @@
+<% # A dashboard to add users and manage user permissions. %>
+
+<%= js_bundle(:users_admin_js) %>
+
+<div id="manageUsers" data-user-id="<%= current_user.id %>">
+
+  <%= admin_page_breadcrumb "Manage users" %>
+
+  <table>
+    <tr>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Permission</th>
+      <th>Delete</th>
+    </tr>
+
+    <% users.each do |user| %>
+      <tr data-user-id="<%= user.id %>">
+        <td><%= user.name %></td>
+        <td><%= user.email %></td>
+        <td>
+          <div class="userPermissionControl">
+            <label>
+              <% admin = user.permission == "admin" %>
+              <% name = "user_#{user.id}" %>
+              <input type="radio" name="<%= name %>" value="admin" <%= "checked='checked'" if admin %> />
+              admin
+            </label>
+            <label>
+              <input type="radio" name="<%= name %>" value="normal" <%= "checked='checked'" unless admin %> />
+              normal
+            </label>
+          </div>
+        </td>
+        <td><div class="trash"</div></td>
+      </tr>
+    <% end %>
+  </table>
+</div>

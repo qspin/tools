@@ -1,0 +1,84 @@
+<%#
+  # A dashboard which tells you interesting things about your Barkeep install and helps you spot and
+  # troubleshoot problems.
+  # Params:
+  # - most_recent_commit
+  # - most_recent_comment
+  # - repos
+  # - failed_email_count
+  # - recently_failed_emails
+  # - pending_comments
+  # - pending_comments_count
+%>
+
+<%= admin_page_breadcrumb "Diagnostics" %>
+
+<div id="admin">
+  <h2>Data model metrics</h2>
+
+  <% if most_recent_commit %>
+    <h4>Most recent commit</h4>
+    <p>
+      Most recent commit:<br/>
+      id: <%= most_recent_commit.id %><br/>
+      date: <%= most_recent_commit.date.to_pretty %><br/>
+      author: <%= most_recent_commit.grit_commit.author.name %>
+    </p>
+  <% end %>
+
+  <% if most_recent_comment %>
+    <h4>Most recent comment</h4>
+    <p>
+      id: <%= most_recent_comment.id %><br/>
+      created_at: <%= most_recent_comment.created_at.to_pretty %><br/>
+      author: <%= most_recent_comment.user.name %>
+    </p>
+  <% end %>
+
+  <h2>Repositories</h2>
+  <ul><% repos.each { |repo| %><li><%= repo %></li><% } %></ul>
+
+  <h2>Comments waiting to be emailed, oldest first (<%= pending_comments_count %> total)</h2>
+  <% unless pending_comments.empty? %>
+    <table>
+      <tr>
+        <th>id</th>
+        <th>created_at</th>
+        <th>commit_id</th>
+        <th>author</th>
+      </tr>
+      <% pending_comments.each do |comment| %>
+      <tr>
+        <td><%= comment.id %></td>
+        <td><%= comment.created_at.to_pretty %></td>
+        <td><%= comment.commit.sha %></td>
+        <td><%= comment.user.email %></td>
+      </tr>
+      <% end %>
+    </table>
+  <% end %>
+
+
+  <h2>Recently failed email tasks (<%= failed_email_count %> total)</h2>
+  <% unless recently_failed_emails.empty? %>
+    <table id="failedEmails">
+      <tr>
+        <th>id</th>
+        <th>to</th>
+        <th>subject</th>
+        <th>last attempted</th>
+        <th>failure reason</th>
+      </tr>
+
+      <% recently_failed_emails.each do |email| %>
+        <tr>
+          <td><%= email.id %></td>
+          <td><%= email.to.split(",").join(" ") %></td>
+          <td><%= email.subject[0..30] %></td>
+          <td><%= email.created_at.to_pretty %></td>
+          <td><%= email.failure_reason %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% end %>
+</div>

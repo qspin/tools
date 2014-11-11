@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><% if defined?(commit) %><%= commit.message[0...80] %> | <% end %>Barkeep</title>
+  <link href='//fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic,700italic' \
+        rel='stylesheet' type='text/css' />
+  <%= css_url("/css/styles.css") %>
+  <%= js_bundle(:vendor_js) %>
+  <%= js_bundle(:app_js) %>
+  <% if ((defined?(RACK_ENV) && RACK_ENV) || ENV["RACK_ENV"]) == "development" %>
+    <%= js_url("/vendor/livecss.js") %>
+  <% end %>
+
+  <script>
+    $(document).ready(function() {
+      if (jQuery.browser.webkit)
+        $("body").addClass("webkit");
+      else if (jQuery.browser.mozilla)
+        $("body").addClass("gecko");
+
+      // Load up tipsy tooltips
+      var default_tipsy_options = { opacity: 0.95, live: true };
+      $(".north[rel=tipsy]").tipsy($.extend({}, default_tipsy_options, {gravity: "n"}));
+      $(".south[rel=tipsy]").tipsy($.extend({}, default_tipsy_options, {gravity: "s"}));
+      $(".east[rel=tipsy]").tipsy($.extend({}, default_tipsy_options, {gravity: "e"}));
+      $(".west[rel=tipsy]").tipsy($.extend({}, default_tipsy_options, {gravity: "w"}));
+    });
+
+    var preloadImage = function(url) {
+      var image = new Image();
+      image.src = url;
+    };
+
+    window.userLoggedIn = <%= !current_user.nil? %>;
+
+    // Preload the icon's on-hover state. Otherwise it flickers for a second while it's loading and you might
+    // not see it... which would be tragic.
+    preloadImage("<%= asset_url("/assets/images/barkeep_logo_howdy_80px.png") %>");
+  </script>
+</head>
+
+<body>
+  <div id="container">
+    <header>
+        <div id="icon"></div>
+
+        <h1 title="Keep that code bar high."><a href="/">bar<span class="keep">keep</span></a> <img style="width:60px; margin-left: 5px;" src="<%= asset_url("/assets/images/qspin.png") %>"/></h1>
+
+        <nav>
+          <ul>
+            <!-- These extra divs are needed for styling. -->
+            <li class="<%= current_page_if_url("commits") %>">
+              <div><a href="/commits">Commits</a></div>
+            </li>
+            <li class="<%= current_page_if_url("stats") %>">
+              <div><a href="/stats">Stats</a></div>
+            </li>
+          </ul>
+        </nav>
+
+        <div id="signInBox">
+          <% if current_user %>
+            <img class="signInGravatar" src="<%= current_user.gravatar %>" />
+            <span class="userEmail"><%= current_user.email %></span> |
+            <% if current_user.admin? %>
+              <a href="/admin" class="<%= current_page_if_url("admin") %>">Admin</a> |
+            <% end %>
+            <a href="/settings" class="<%= current_page_if_url("settings") %>">Settings</a> |
+          <% end %>
+          <% if current_user.nil? || current_user.demo? %>
+            <a href="/signin">Sign in</a>
+          <% else %>
+            <a href="/signout">Sign out</a>
+          <% end %>
+        </div>
+    </header>
+
+    <div id="body">
+      <%= yield %>
+      <%= erb :_keyboard_shortcuts, :layout => false, :locals => { :view => request.path[1..-1] } %>
+    </div>
+  </div>
+</body>
+</html>

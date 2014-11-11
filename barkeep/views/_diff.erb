@@ -1,0 +1,93 @@
+<a name="<%= file.file_name_before %>"></a>
+<div class="file" filename="<%= file.file_name_before %>" >
+  <div class="filename">
+    <a href="#<%= file.file_name_before %>">
+      <%= StringFilter.truncate_front(file.display_file_name, 100) %>
+    </a>
+  </div>
+  <div class="comments">
+  <% line_comments, comment_index = [], 0 %>
+    <% if commit_file = commit ? commit.commit_files_dataset[:filename => file.file_name_before] : nil %>
+      <% commit_file.file_comments.each do |comment| %>
+        <%= erb :_comment, :locals => {:comment => comment} %>
+      <% end %>
+      <% line_comments = commit_file.line_comments %>
+    <% end %>
+  </div>
+  <div class="dataWrapper">
+    <% [:codeLeft, :codeRight].each do |table_class| # make 2 identical tables for side-by-side diff %>
+    <% comment_index = 0
+       unchunked_lines = 0
+       comments_on_line = 0
+       first_expander = true %>
+      <div class="<%= table_class %>"><table class="data">
+        <% if file.special_case %>
+          <tr><td class="fileSpecial"><%= file.special_case %></td></tr>
+        <% else %>
+          <% file.lines.each_with_index do |line, i| %>
+
+            <% index = comment_index %>
+            <% comments_on_line = 0 %>
+            <%  while index < line_comments.length %>
+              <% if line_comments[index].line_number == i + 1 %>
+                <% comments_on_line += 1 %>
+              <% end %>
+              <% index += 1 %>
+            <% end %>
+
+            <% if line.chunk && unchunked_lines > 0 %>
+              <%= MustacheRenderer.context_expander(first_expander, false, i, unchunked_lines > 10) %>
+              <% first_expander = false
+                 unchunked_lines = 0 %>
+            <% end %>
+            <% unchunked_lines += 1 unless line.chunk
+               first_expander = false if line.chunk %>
+            <% replace = line.replace && ( table_class == :codeLeft && line.tag == :added ||
+                                           table_class == :codeRight && line.tag == :removed ) %>
+            <tr class="diffLine <%= line.chunk ? "chunk" : "" %> <%= line.chunk_start ? "chunk-start" : "" %>"
+              diff-line-number="<%= i + 1 %>" replace="<%= replace %>" tag="<%= line.tag %>">
+              <td class="lineNumber leftNumber"><div class="slideDiv"><%= line.line_num_before || "&nbsp;" %>
+                </div></td>
+              <td class="lineNumber rightNumber"><div class="slideDiv"><%= line.line_num_after || "&nbsp;" %>
+                </div></td>
+              <td class="code <%= line.tag %>">
+                <% # the space is needed so that the comment button takes the same height as the code text %>
+
+                <div class="addCommentButton slideDiv">&nbsp;</div>
+                <% if true %>
+                  <% has_comment = (comments_on_line > 0) ? "true" : "false" %>
+                  <div class="diffCommentCount slideDiv">
+                  <%
+                     comment_count_text = "#{comments_on_line} comment#{'s' unless comments_on_line == 1}"
+                  %>
+                  <a class="noLink tipsyCommentCount" commentCount="<%= comments_on_line %>"
+                      title="<%= StringHelper.pluralize(comments_on_line, 'comment') %>" style="display:none">
+                    <span><%= comments_on_line %></span><img src="/assets/images/comment_bubble.png" />
+                  </a>
+                </div>
+                <% end %>
+                <div class="codeContainer slideDiv">
+                  <div class="marginLine"></div>
+                  <div class="codeText">
+                    <%= line.formatted %>
+                  </div>
+                  <% # add line comments
+                    while comment_index < line_comments.length &&
+                      line_comments[comment_index].line_number == i + 1 %>
+                    <%= erb :_comment, :locals => { :comment => line_comments[comment_index] } %>
+                    <% comment_index += 1 %>
+                  <% end %>
+                </div>
+
+
+              </td>
+            </tr>
+            <% if !line.chunk && file.lines[i+1].nil? && unchunked_lines > 0 %>
+              <%= MustacheRenderer.context_expander(false, true, i+1, unchunked_lines > 10) %>
+            <% end %>
+          <% end %>
+        <% end %>
+      </table></div>
+    <% end %>
+  </div>
+</div>
